@@ -11,7 +11,7 @@ const useFirestore = (collectionName, condition) => {
         let q = query(collectionRef, orderBy('createdAt'));
         console.log(condition);
         if (condition) {
-            if (condition.compareValue.length === 0 || !condition.compareValue) {
+            if (condition.compareValue?.length === 0 || !condition.compareValue) {
                 return;
             }
             q = query(collectionRef, where(condition.fieldName, condition.operator, condition.compareValue));
