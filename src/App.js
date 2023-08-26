@@ -3,16 +3,20 @@ import './App.css';
 import { Routes, Route } from "react-router-dom"
 import Login from './components/Login';
 import ChatRoom from './components/ChatRoom';
-import AuthProvider from './components/Context/AuthProvider';
-
+import AuthProvider from './Context/AuthProvider';
+import AppProvider from './Context/AppProvider';
+import AddRoom from './components/Models/AddRoom';
 
 function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path='/login' element={<Login />} />
-        <Route path='/' element={<ChatRoom />} />
-      </Routes>
+      <AppProvider>
+        <Routes>
+          <Route path='/login' element={<Login />} />
+          <Route path='/' element={<ChatRoom />} />
+        </Routes>
+        <AddRoom />
+      </AppProvider>
     </AuthProvider>
   );
 }

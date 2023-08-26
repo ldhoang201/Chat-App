@@ -2,15 +2,27 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { Row, Col, Button, Typography } from 'antd';
 import { signInWithPopup } from "firebase/auth";
-import { auth, fbProvider, ggProvider } from '../firebase/config';
+import { auth, db, fbProvider, ggProvider } from '../../firebase/config';
+import { collection, addDoc } from 'firebase/firestore';
 
 const { Title } = Typography;
 
 
 export default function Login() {
 
-    const handleGoogleLogin = () => {
-        signInWithPopup(auth, ggProvider); 
+    const handleGoogleLogin = async () => {
+        const { _tokenResponse, user } = await signInWithPopup(auth, ggProvider);
+        console.log(user);
+        if (_tokenResponse.hasOwnProperty('isNewUser') && _tokenResponse.isNewUser) {
+            const userCollection = collection(db, 'users');
+            await addDoc(userCollection, {
+                displayName: user.displayName,
+                email: user.email,
+                photoURL: user.photoURL,
+                uid: user.uid,
+                providerId: _tokenResponse.providerId
+            })
+        }
     }
 
     return (

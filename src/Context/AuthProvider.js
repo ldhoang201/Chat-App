@@ -15,7 +15,6 @@ export default function AuthProvider({ children }) {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
-                console.log(currentUser);
                 const { displayName, email, uid, photoURL } = currentUser;
                 setUser({
                     displayName,
@@ -23,10 +22,10 @@ export default function AuthProvider({ children }) {
                     uid,
                     photoURL
                 });
-                setTimeout(() => {
-                    setIsLoading(false);
-                    navigate('/')
-                }, 2000);
+                setIsLoading(false);
+                navigate('/')
+
+                return;
             }
             else {
                 setUser({});
