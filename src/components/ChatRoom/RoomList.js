@@ -35,7 +35,7 @@ const LinkStyled = styled(Typography.Link)`
 
 export default function RoomList() {
 
-  const { rooms, setIsOpenAddRoom } = useContext(AppContext);
+  const { rooms, setIsOpenAddRoom,setSelectedRoomId } = useContext(AppContext);
 
 
   const handleAddRoom = () => {
@@ -47,7 +47,7 @@ export default function RoomList() {
       <PanelStyled header='danh sach cach phong' key='1'>
         {
           rooms.map((room) =>
-            <LinkStyled key={room.id}>{room.name}</LinkStyled>
+            <LinkStyled onClick={() => setSelectedRoomId(room.id) } key={room.id}>{room.name}</LinkStyled>
           )
         }
         <Button type='text'

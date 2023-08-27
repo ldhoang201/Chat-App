@@ -9,7 +9,6 @@ const useFirestore = (collectionName, condition) => {
     useEffect(() => {
         const collectionRef = collection(db, collectionName);
         let q = query(collectionRef, orderBy('createdAt'));
-        console.log(condition);
         if (condition) {
             if (condition.compareValue?.length === 0 || !condition.compareValue) {
                 return;

@@ -1,8 +1,9 @@
 import { UserAddOutlined } from '@ant-design/icons';
-import { Avatar, Button, Form, Input, Tooltip } from 'antd';
-import React from 'react'
+import { Alert, Avatar, Button, Form, Input, Tooltip } from 'antd';
+import React, { useContext, useMemo } from 'react'
 import styled from 'styled-components';
 import Message from './Message';
+import { AppContext } from '../../Context/AppProvider';
 
 const HeaderStyled = styled.div`
 display: flex;
@@ -69,45 +70,68 @@ overflow-y: auto;
 
 export default function ChatWindown() {
 
+  const { selectedRoom, members, setIsOpenInviteMember } = useContext(AppContext);
+
 
 
   return (
     <WrapperStyled>
-      <HeaderStyled>
-        <div className='header__info'>
-          <p className='header__title'>
-            Room1
-          </p>
-          <span className='header__description'>
-            Day la room 1
-          </span>
-        </div>
-        <ButtonGroupStyled>
-          <Button icon={<UserAddOutlined />} type='text'>Moi</Button>
-          <Avatar.Group size='small' maxCount={2}>
-            <Tooltip title='A'>
-              <Avatar>A</Avatar>
-            </Tooltip>
-            <Tooltip title='B'>
-              <Avatar>B</Avatar>
-            </Tooltip>
-            <Tooltip title='C'>
-              <Avatar>C</Avatar>
-            </Tooltip>
-          </Avatar.Group>
-        </ButtonGroupStyled>
-      </HeaderStyled>
-      <ContentStyled>
-        <MessageListStyled>
-          <Message text='alo' displayName='hoang' createdAt={1692976074} />
-        </MessageListStyled>
-        <FormStyled>
-          <Form.Item>
-            <Input bordered={false} autoComplete='off' placeholder='Nhap tin nhan' />
-          </Form.Item>
-          <Button type='primary'>Gui</Button>
-        </FormStyled>
-      </ContentStyled>
+      {
+        selectedRoom?.id ?
+          (
+            <>
+              <HeaderStyled>
+                <div className='header__info'>
+                  <p className='header__title'>
+                    {selectedRoom?.name}
+                  </p>
+                  <span className='header__description'>
+                    {selectedRoom?.description}
+                  </span>
+                </div>
+                <ButtonGroupStyled>
+                  <Button
+                    icon={<UserAddOutlined />}
+                    type='text'
+                    onClick={() => setIsOpenInviteMember(true)}
+                  >
+                    Moi
+                  </Button>
+                  {
+                    members.map(member => (
+                      <Avatar.Group size='small' maxCount={2} key={member.id}>
+                        <Tooltip title={member.displayName}>
+                          <Avatar src={member.photoURL}></Avatar>
+                        </Tooltip>
+                      </Avatar.Group>
+                    ))
+                  }
+                </ButtonGroupStyled>
+              </HeaderStyled>
+              <ContentStyled>
+                <MessageListStyled>
+                  <Message text='alo' displayName='hoang' createdAt={1692976074} />
+                </MessageListStyled>
+                <FormStyled>
+                  <Form.Item>
+                    <Input bordered={false} autoComplete='off' placeholder='Nhap tin nhan' />
+                  </Form.Item>
+                  <Button type='primary'>Gui</Button>
+                </FormStyled>
+              </ContentStyled>
+            </>
+          )
+          :
+          <Alert
+            message='Hay chon phong'
+            type='info'
+            showIcon
+            closable
+            style={{ margin: 5 }}
+          />
+
+      }
+
     </WrapperStyled>
   )
 }

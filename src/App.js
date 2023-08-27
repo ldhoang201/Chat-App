@@ -6,6 +6,7 @@ import ChatRoom from './components/ChatRoom';
 import AuthProvider from './Context/AuthProvider';
 import AppProvider from './Context/AppProvider';
 import AddRoom from './components/Models/AddRoom';
+import InviteMember from './components/Models/InviteMember';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path='/' element={<ChatRoom />} />
         </Routes>
         <AddRoom />
+        <InviteMember/>
       </AppProvider>
     </AuthProvider>
   );

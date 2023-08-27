@@ -14,20 +14,27 @@ export default function AddRoom() {
     const { user: { uid } } = useContext(AuthContext)
     const [form] = useForm()
 
-    console.log(isOpenAddRoom);
-
     const handleOk = async () => {
         const roomsCollection = collection(db, 'rooms');
         const roomName = form.getFieldValue('name');
 
-        const roomQuery = query(roomsCollection, where('name', '==', roomName));
-        const roomQuerySnapshot = await getDocs(roomQuery);
+        if (roomName) {
+            const roomQuery = query(roomsCollection, where('name', '==', roomName));
+            const roomQuerySnapshot = await getDocs(roomQuery);
 
-        if (!roomQuerySnapshot.empty) {
+            if (!roomQuerySnapshot.empty) {
+                message.error({
+                    content: 'Phong da ton tai',
+                    'duration': 3
+                });
+                return;
+            }
+        }
+        else {
             message.error({
-                content: 'Phong da ton tai',
+                content: 'Hay nhap ten phong',
                 'duration': 3
-            });
+            })
             return;
         }
 
