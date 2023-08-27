@@ -8,13 +8,15 @@ const useFirestore = (collectionName, condition) => {
 
     useEffect(() => {
         const collectionRef = collection(db, collectionName);
-        let q = query(collectionRef, orderBy('createdAt'));
+        let q = query(collectionRef);
         if (condition) {
             if (condition.compareValue?.length === 0 || !condition.compareValue) {
                 return;
             }
             q = query(collectionRef, where(condition.fieldName, condition.operator, condition.compareValue));
         }
+
+
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const documents = snapshot.docs.map(doc => ({

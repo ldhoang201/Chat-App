@@ -1,9 +1,14 @@
 import { UserAddOutlined } from '@ant-design/icons';
 import { Alert, Avatar, Button, Form, Input, Tooltip } from 'antd';
-import React, { useContext, useMemo } from 'react'
+import React, { cloneElement, useContext, useMemo, useState } from 'react'
 import styled from 'styled-components';
 import Message from './Message';
 import { AppContext } from '../../Context/AppProvider';
+import { AuthContext } from '../../Context/AuthProvider';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebase/config';
+import { useForm } from 'antd/es/form/Form';
+import useFirestore from '../../hooks/useFirestore';
 
 const HeaderStyled = styled.div`
 display: flex;
@@ -71,6 +76,39 @@ overflow-y: auto;
 export default function ChatWindown() {
 
   const { selectedRoom, members, setIsOpenInviteMember } = useContext(AppContext);
+  const { user: { uid, photoURL, displayName } } = useContext(AuthContext);
+  const [inputValue, setInputValue] = useState('');
+  const [form] = useForm()
+
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value)
+  }
+
+  const handleOnSubmit = () => {
+    addDoc(collection(db, 'messages'), {
+      text: inputValue,
+      uid,
+      photoURL,
+      roomId: selectedRoom?.id,
+      displayName,
+      createdAt: serverTimestamp()
+    })
+    form.resetFields(['message'])
+  }
+
+  const messagesCondition = useMemo(() => {
+    return {
+      fieldName: 'roomId',
+      operator: '==',
+      compareValue: selectedRoom?.id
+    }
+  }, [selectedRoom?.id])
+
+  const messages = useFirestore('messages', messagesCondition)
+
+
+
+  console.log(messages);
 
 
 
@@ -99,24 +137,49 @@ export default function ChatWindown() {
                   </Button>
                   {
                     members.map(member => (
-                      <Avatar.Group size='small' maxCount={2} key={member.id}>
-                        <Tooltip title={member.displayName}>
-                          <Avatar src={member.photoURL}></Avatar>
-                        </Tooltip>
-                      </Avatar.Group>
+                      member.uid !== uid
+                      &&
+                      (
+                        <Avatar.Group size='small' maxCount={2} key={member.id}>
+                          <Tooltip title={member.displayName}>
+                            <Avatar src={member.photoURL}></Avatar>
+                          </Tooltip>
+                        </Avatar.Group>
+                      )
+
                     ))
                   }
                 </ButtonGroupStyled>
               </HeaderStyled>
               <ContentStyled>
                 <MessageListStyled>
-                  <Message text='alo' displayName='hoang' createdAt={1692976074} />
+                  {
+                    messages.map((message) => (
+                      <Message
+                        key={message.id}
+                        text={message.text}
+                        photoURL={message.photoURL}
+                        displayName={message.displayName}
+                        createdAt={message.createdAt}
+                      />
+                    ))
+                  }
                 </MessageListStyled>
-                <FormStyled>
-                  <Form.Item>
-                    <Input bordered={false} autoComplete='off' placeholder='Nhap tin nhan' />
+                <FormStyled form={form}>
+                  <Form.Item name='message'>
+                    <Input
+                      onChange={handleInputChange}
+                      onPressEnter={handleOnSubmit}
+                      bordered={false}
+                      autoComplete='off'
+                      placeholder='Nhap tin nhan' />
                   </Form.Item>
-                  <Button type='primary'>Gui</Button>
+                  <Button
+                    type='primary'
+                    onClick={handleOnSubmit}
+                  >
+                    Gui
+                  </Button>
                 </FormStyled>
               </ContentStyled>
             </>
@@ -132,6 +195,6 @@ export default function ChatWindown() {
 
       }
 
-    </WrapperStyled>
+    </WrapperStyled >
   )
 }

@@ -8,6 +8,7 @@ import { debounce } from 'lodash'
 import { updateDoc, getDocs, query, where, collection, orderBy, limit, doc, getDoc } from 'firebase/firestore'
 
 
+
 function DebounceSelect({ fetchOption, debouceTimeout = 300, ...props }) {
     const [fetching, setIsFetching] = useState(false);
     const [options, setOptions] = useState([]);
@@ -29,7 +30,11 @@ function DebounceSelect({ fetchOption, debouceTimeout = 300, ...props }) {
             labelInValue
             filterOption={false}
             onSearch={debounceFetcher}
-            notFoundContent={fetching ? <Spin size='small' /> : null}
+            notFoundContent={fetching ? <Spin size='small' />
+                :
+                <Select.Option disabled key="notFound">
+                    Khong tim thay user
+                </Select.Option>}
             {...props}
         >
             {
@@ -50,35 +55,39 @@ function DebounceSelect({ fetchOption, debouceTimeout = 300, ...props }) {
     )
 }
 
-const fetchUserList = async (search) => {
-    const q = query(
-        collection(db, 'users'),
-        where('keywords', 'array-contains', search),
-        orderBy('displayName'),
-        limit(20)
-    );
-
-    const querySnapshot = await getDocs(q);
-
-    const userList = [];
-    querySnapshot.forEach((doc) => {
-        userList.push({
-            value: doc.data().uid,
-            label: doc.data().displayName,
-            photoURL: doc.data().photoURL
-        });
-    });
-
-    return userList;
-}
-
 
 export default function InviteMember() {
 
     const { isOpenInviteMember, setIsOpenInviteMember, selectedRoom, selectedRoomId } = useContext(AppContext);
-    const { user: { uid } } = useContext(AuthContext);
     const [value, setValue] = useState([]);
+    const { user: { uid } } = useContext(AuthContext);
     const [form] = useForm();
+
+    const fetchUserList = async (search) => {
+        const q = query(
+            collection(db, 'users'),
+            where('keywords', 'array-contains', search),
+            orderBy('displayName'),
+            limit(20)
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        const userList = [];
+        querySnapshot.forEach((doc) => {
+            const user = doc.data();
+            if (user.uid !== uid) {
+                userList.push({
+                    value: user.uid,
+                    label: user.displayName,
+                    photoURL: user.photoURL
+                });
+            }
+        });
+
+
+        return userList;
+    }
 
     const handleOk = () => {
 
