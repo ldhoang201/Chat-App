@@ -1,12 +1,13 @@
-import { UserAddOutlined } from '@ant-design/icons';
-import { Alert, Avatar, Button, Form, Input, Tooltip } from 'antd';
+import { UserAddOutlined, UploadOutlined } from '@ant-design/icons';
+import { Alert, Avatar, Button, Form, Input, Tooltip, Upload, Modal } from 'antd';
 import React, { cloneElement, useContext, useMemo, useState } from 'react'
 import styled from 'styled-components';
 import Message from './Message';
 import { AppContext } from '../../Context/AppProvider';
 import { AuthContext } from '../../Context/AuthProvider';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { db, storage } from '../../firebase/config';
 import { useForm } from 'antd/es/form/Form';
 import useFirestore from '../../hooks/useFirestore';
 
@@ -49,7 +50,7 @@ const ContentStyled = styled.div`
 height: calc(100% - 56px);
 display: flex;
 flex-direction: column;
-padding: 11px;
+padding: 0px;
 justify-content: flex-end;
 `;
 
@@ -70,6 +71,7 @@ border-radius: 2px;
 const MessageListStyled = styled.div`
 max-height: 100%;
 overflow-y: auto;
+margin-left:20px
 `;
 
 
@@ -78,23 +80,56 @@ export default function ChatWindown() {
   const { selectedRoom, members, setIsOpenInviteMember } = useContext(AppContext);
   const { user: { uid, photoURL, displayName } } = useContext(AuthContext);
   const [inputValue, setInputValue] = useState('');
+  const [imagePreviewVisible, setImagePreviewVisible] = useState(false);
+  const [image, setImage] = useState(null);
   const [form] = useForm()
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value)
   }
 
-  const handleOnSubmit = () => {
-    addDoc(collection(db, 'messages'), {
-      text: inputValue,
-      uid,
-      photoURL,
-      roomId: selectedRoom?.id,
-      displayName,
-      createdAt: serverTimestamp()
-    })
-    form.resetFields(['message'])
-  }
+  const handleOnSubmit = async () => {
+    if (inputValue || image) {
+      const messageData = {
+        text: inputValue,
+        uid,
+        photoURL,
+        roomId: selectedRoom?.id,
+        displayName,
+        createdAt: serverTimestamp()
+      };
+
+
+      if (image) {
+        const storageRef = ref(storage, 'images/' + image.name);
+        const metadata = {
+          contentType: 'image/*',
+        };
+        await uploadBytes(storageRef, image, metadata).then((snapshot) => {
+          console.log('Uploaded a blob or file!');
+        })
+          .catch((err) => {
+            console.log(err);
+          })
+
+        await getDownloadURL(storageRef).then((url) => {
+          messageData['imageURL'] = url
+        })
+          .catch((err) => {
+            console.log(err);
+          })
+
+        setImagePreviewVisible(false);
+      }
+
+      console.log(messageData);
+
+      await addDoc(collection(db, 'messages'), messageData);
+
+      form.resetFields(['message', 'image']);
+      setImage(null);
+    }
+  };
 
   const messagesCondition = useMemo(() => {
     return {
@@ -106,9 +141,6 @@ export default function ChatWindown() {
 
   const messages = useFirestore('messages', messagesCondition)
 
-
-
-  console.log(messages);
 
 
 
@@ -161,6 +193,8 @@ export default function ChatWindown() {
                         photoURL={message.photoURL}
                         displayName={message.displayName}
                         createdAt={message.createdAt}
+                        imgUrl={message.imageURL}
+                        uid={message.uid}
                       />
                     ))
                   }
@@ -172,15 +206,45 @@ export default function ChatWindown() {
                       onPressEnter={handleOnSubmit}
                       bordered={false}
                       autoComplete='off'
-                      placeholder='Nhap tin nhan' />
+                      placeholder='Nhập tin nhắn' />
                   </Form.Item>
+                  <Form.Item name='image'>
+                    <Upload
+                      accept='image/*'
+                      showUploadList={false}
+                      customRequest={({ file }) => {
+                        setImage(file);
+                      }}
+                      onChange={(info) => {
+                        console.log('File onChange event:', info);
+                        setImagePreviewVisible(true);
+                      }}
+                    >
+                      <Button icon={<UploadOutlined />} />
+                    </Upload>
+                  </Form.Item>
+
+
                   <Button
                     type='primary'
                     onClick={handleOnSubmit}
                   >
-                    Gui
+                    Gửi
                   </Button>
                 </FormStyled>
+
+                <Modal
+                  open={imagePreviewVisible}
+                  onCancel={() => setImagePreviewVisible(false)}
+                  footer={[
+                    <Button key="submit" type="primary" onClick={handleOnSubmit}>
+                      Gửi
+                    </Button>,
+                  ]}
+                >
+                  {image && <img src={URL.createObjectURL(image)} alt="Preview" style={{ maxWidth: '100%' }} />}
+                </Modal>
+
               </ContentStyled>
             </>
           )

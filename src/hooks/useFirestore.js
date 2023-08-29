@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { db } from "../firebase/config";
-import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, or } from "firebase/firestore";
 
 
 const useFirestore = (collectionName, condition) => {
@@ -9,10 +9,12 @@ const useFirestore = (collectionName, condition) => {
     useEffect(() => {
         const collectionRef = collection(db, collectionName);
         let q = query(collectionRef);
+
         if (condition) {
             if (condition.compareValue?.length === 0 || !condition.compareValue) {
                 return;
             }
+
             q = query(collectionRef, where(condition.fieldName, condition.operator, condition.compareValue));
         }
 
@@ -22,13 +24,14 @@ const useFirestore = (collectionName, condition) => {
             const documents = snapshot.docs.map(doc => ({
                 ...doc.data(),
                 id: doc.id
-            }));
+            })).sort((a, b) => a.createdAt - b.createdAt);
             setDocuments(documents);
         });
 
         // Clean up function
         return () => unsubscribe();
     }, [collectionName, condition]);
+
 
     return documents;
 }

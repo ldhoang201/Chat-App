@@ -42,7 +42,6 @@ export default function RoomList() {
     setIsOpenAddRoom(true);
   }
 
-  console.log(rooms);
 
   return (
     <Collapse ghost>

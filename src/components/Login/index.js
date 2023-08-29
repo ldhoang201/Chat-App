@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Row, Col, Button, Typography } from 'antd';
 import { signInWithPopup } from "firebase/auth";
 import { auth, db, fbProvider, ggProvider } from '../../firebase/config';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { generateKeywords } from '../../firebase/service';
 
 const { Title } = Typography;
@@ -22,7 +22,8 @@ export default function Login() {
                 photoURL: user.photoURL,
                 uid: user.uid,
                 providerId: _tokenResponse.providerId,
-                keywords: generateKeywords(user.displayName)
+                keywords: generateKeywords(user.displayName),
+                createdAt: serverTimestamp()
             })
         }
     }
