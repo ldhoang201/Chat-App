@@ -1,77 +1,83 @@
-import { UserAddOutlined, UploadOutlined } from '@ant-design/icons';
+import { UserAddOutlined, UploadOutlined, MessageOutlined, SmileOutlined,RightOutlined, InfoCircleFilled, InfoCircleOutlined, InfoCircleTwoTone } from '@ant-design/icons';
 import { Alert, Avatar, Button, Form, Input, Tooltip, Upload, Modal } from 'antd';
-import React, { cloneElement, useContext, useMemo, useState } from 'react'
+import React, { cloneElement, useContext, useMemo, useState, useEffect, useRef } from 'react'
 import styled from 'styled-components';
 import Message from './Message';
 import { AppContext } from '../../Context/AppProvider';
 import { AuthContext } from '../../Context/AuthProvider';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, query, serverTimestamp, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../firebase/config';
 import { useForm } from 'antd/es/form/Form';
 import useFirestore from '../../hooks/useFirestore';
+import data from '@emoji-mart/data'
+import Picker from '@emoji-mart/react'
+import ChatInfo from './ChatInfo';
 
 const HeaderStyled = styled.div`
-display: flex;
-justify-content: space-between;
-height: 56px;
-padding: 0 16px;
-align-items: center;
-border-bottom: 1px solid rgb(230, 230, 230);
+      display: flex;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 16px;
+      align-items: center;
+      border-bottom: 1px solid rgb(230, 230, 230);
 
-.header {
-  &__info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
+      .header {
+            &__info {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+            }
 
-  &__title {
-    margin: 0;
-    font-weight: bold;
-  }
+            &__title {
+              margin: 0;
+              font-weight: bold;
+            }
 
-  &__description {
-    font-size: 12px;
-  }
-}
-`;
+            &__description {
+              font-size: 12px;
+            }
+          }
+      `;
 
 const ButtonGroupStyled = styled.div`
-display: flex;
-align-items: center;
+      display: flex;
+      align-items: center;
 `;
 
 const WrapperStyled = styled.div`
-height: 100vh;
+      height: 100vh;
+
 `;
 
 const ContentStyled = styled.div`
-height: calc(100% - 56px);
-display: flex;
-flex-direction: column;
-padding: 0px;
-justify-content: flex-end;
+      height: calc(100% - 56px);
+      display: flex;
+      flex-direction: column;
+      padding: 0px;
+      justify-content: flex-end;
 `;
+
+
 
 const FormStyled = styled(Form)`
-display: flex;
-justify-content: space-between;
-align-items: center;
-padding: 2px 2px 2px 0;
-border: 1px solid rgb(230, 230, 230);
-border-radius: 2px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 2px 2px 0;
+      border: 1px solid rgb(230, 230, 230);
+      border-radius: 2px;
 
-.ant-form-item {
-  flex: 1;
-  margin-bottom: 0;
-}
-`;
+      .ant-form-item {
+        flex: 1;
+        margin-bottom: 0;
+      }
+      `;
 
 const MessageListStyled = styled.div`
-max-height: 100%;
-overflow-y: auto;
-margin-left:20px
+      max-height: 100%;
+      overflow-y: auto;
+      margin-left:20px
 `;
 
 
@@ -79,10 +85,12 @@ export default function ChatWindown() {
 
   const { selectedRoom, members, setIsOpenInviteMember } = useContext(AppContext);
   const { user: { uid, photoURL, displayName } } = useContext(AuthContext);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState('123');
   const [imagePreviewVisible, setImagePreviewVisible] = useState(false);
+  const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
   const [image, setImage] = useState(null);
   const [form] = useForm()
+  const messageListRef = useRef(null);
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value)
@@ -140,7 +148,30 @@ export default function ChatWindown() {
   }, [selectedRoom?.id])
 
   const messages = useFirestore('messages', messagesCondition)
+  const [isChatInfoVisible, setIsChatInfoVisible] = useState(false);
 
+
+  const selectedRoomImages = [
+    'https://example.com/image1.jpg',
+    'https://example.com/image2.jpg',
+    'https://example.com/image3.jpg',
+    // Add more image URLs as needed
+  ];
+
+  const toggleChatInfo = () => {
+    setIsChatInfoVisible((prev) => !prev); // Toggle ChatInfo visibility
+  };
+
+
+  useEffect(() => {
+    if (messageListRef.current) {
+      const maxScrollHeight = 500;
+      messageListRef.current.scrollTop = Math.max(
+        messageListRef.current.scrollHeight,
+        maxScrollHeight
+      );
+    }
+  }, [messages, selectedRoom?.id]);
 
 
 
@@ -181,10 +212,18 @@ export default function ChatWindown() {
 
                     ))
                   }
+                  <Button 
+                  icon={<InfoCircleTwoTone/>}
+                  size='large'
+                  type='text' 
+                  onClick={toggleChatInfo}
+                  />
                 </ButtonGroupStyled>
               </HeaderStyled>
               <ContentStyled>
-                <MessageListStyled>
+
+               
+                <MessageListStyled ref={messageListRef}>
                   {
                     messages.map((message) => (
                       <Message
@@ -200,15 +239,7 @@ export default function ChatWindown() {
                   }
                 </MessageListStyled>
                 <FormStyled form={form}>
-                  <Form.Item name='message'>
-                    <Input
-                      onChange={handleInputChange}
-                      onPressEnter={handleOnSubmit}
-                      bordered={false}
-                      autoComplete='off'
-                      placeholder='Nhập tin nhắn' />
-                  </Form.Item>
-                  <Form.Item name='image'>
+                  <Form.Item name='upload-image' style={{ flex: 'none' }}>
                     <Upload
                       accept='image/*'
                       showUploadList={false}
@@ -223,7 +254,36 @@ export default function ChatWindown() {
                       <Button icon={<UploadOutlined />} />
                     </Upload>
                   </Form.Item>
-
+                  <Form.Item name='message' style={{ flex: 1, marginBottom: 0 }}>
+                    <Input
+                      onChange={handleInputChange}
+                      onPressEnter={handleOnSubmit}
+                      bordered={false}
+                      autoComplete='off'
+                      placeholder='Nhập tin nhắn'
+                      value='123'
+                      prefix={<MessageOutlined />}
+                      suffix={
+                        <>
+                          <Button icon={<SmileOutlined />} onClick={() => setIsEmojiPickerVisible(true)} />
+                          <Modal
+                            title="Chọn biểu tượng"
+                            open={isEmojiPickerVisible}
+                            onCancel={() => setIsEmojiPickerVisible(false)}
+                            footer={null}
+                          >
+                            <Picker
+                              data={data}
+                              onEmojiSelect={(emoji) => {
+                                setIsEmojiPickerVisible(false);
+                                setInputValue(prevValue => prevValue + emoji.native);
+                              }}
+                            />
+                          </Modal>
+                        </>
+                      }
+                    />
+                  </Form.Item>
 
                   <Button
                     type='primary'
@@ -232,6 +292,7 @@ export default function ChatWindown() {
                     Gửi
                   </Button>
                 </FormStyled>
+
 
                 <Modal
                   open={imagePreviewVisible}
@@ -244,6 +305,7 @@ export default function ChatWindown() {
                 >
                   {image && <img src={URL.createObjectURL(image)} alt="Preview" style={{ maxWidth: '100%' }} />}
                 </Modal>
+
 
               </ContentStyled>
             </>

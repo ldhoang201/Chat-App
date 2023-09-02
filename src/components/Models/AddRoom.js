@@ -44,6 +44,7 @@ export default function AddRoom() {
             createdAt: serverTimestamp()
         })
         setIsOpenAddRoom(false);
+        form.resetFields(['name', 'description']);
     }
 
     const handleCancel = () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { db } from "../firebase/config";
-import { collection, query, where, orderBy, onSnapshot, or } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 
 
 const useFirestore = (collectionName, condition) => {
@@ -11,20 +11,23 @@ const useFirestore = (collectionName, condition) => {
         let q = query(collectionRef);
 
         if (condition) {
-            if (condition.compareValue?.length === 0 || !condition.compareValue) {
+            if (!condition.compareValue || !condition.compareValue.length) {
+                setDocuments([]);
                 return;
             }
 
-            q = query(collectionRef, where(condition.fieldName, condition.operator, condition.compareValue));
+            else {
+                q = query(collectionRef, where(condition.fieldName, condition.operator, condition.compareValue),orderBy('createdAt'));
+            }
         }
-
 
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const documents = snapshot.docs.map(doc => ({
                 ...doc.data(),
                 id: doc.id
-            })).sort((a, b) => a.createdAt - b.createdAt);
+            }));
+            console.log(documents);
             setDocuments(documents);
         });
 

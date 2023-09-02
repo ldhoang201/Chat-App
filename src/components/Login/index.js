@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Row, Col, Button, Typography } from 'antd';
 import { signInWithPopup } from "firebase/auth";
 import { auth, db, fbProvider, ggProvider } from '../../firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, updateDoc, doc, getDoc, onSnapshot, where, query } from 'firebase/firestore';
 import { generateKeywords } from '../../firebase/service';
 
 const { Title } = Typography;
@@ -23,8 +23,27 @@ export default function Login() {
                 uid: user.uid,
                 providerId: _tokenResponse.providerId,
                 keywords: generateKeywords(user.displayName),
+                isOnline: true,
                 createdAt: serverTimestamp()
             })
+        }
+        else {
+            console.log(user.uid);
+            const userCollection = collection(db, 'users');
+            const q = query(userCollection, where('uid', '==', user.uid));
+
+            onSnapshot(q, (snapshot) => {
+                const data = snapshot.docs.map(doc => ({
+                    ...doc.data(),
+                    id: doc.id
+                }));
+                if (!data[0].isOnline) {
+                    updateDoc(doc(db, 'users', data[0].id), {
+                        isOnline: true
+                    })
+                }
+            })
+
         }
     }
 
@@ -46,3 +65,4 @@ export default function Login() {
         </div>
     );
 }
+

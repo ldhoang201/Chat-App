@@ -8,6 +8,7 @@ import { AuthContext } from '../../Context/AuthProvider';
 const WrapperStyled = styled.div`
   margin-bottom: 15px;
 
+
   .image {
     max-width: 200px;
     max-height: 200px;
@@ -26,13 +27,16 @@ const WrapperStyled = styled.div`
   }
 
   .content {
-    margin-left: 30px;
+    margin-left: ${(props) => (props.isSelf ? '10px' : '30px')};
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid ${(props) => (props.isSelf ? '#0084FF' : '#E4E6EB')}; 
+    background-color: ${(props) => (props.isSelf ? '#0084FF' : '#E4E6EB')}; 
+    color: ${(props) => (props.isSelf ? '#FFF' : '#000')}; /* Điều chỉnh màu sắc văn bản ở đây */
   }
 
 
-  align-self: ${(props) => (props.isSelf ? 'flex-end' : 'flex-start')};
-  margin-left: ${(props) => (props.isSelf ? 'auto' : 'initial')};
-  margin-right: ${(props) => (props.isSelf ? 'initial' : 'auto')};
+  margin-left: ${(props) => (props.isSelf ? '80%' : '0px')};
 
 `;
 
@@ -51,17 +55,22 @@ export default function Message({ imgUrl, text, displayName, createdAt, photoURL
   const { user } = useContext(AuthContext);
 
   const isSelf = (uid === user.uid);
-  console.log(isSelf);
+
   return (
     <WrapperStyled isSelf={isSelf}>
       <div>
-        <Avatar size='small' src={photoURL}>
-          {photoURL ? '' : displayName.charAt(0).toUpperCase()}
-        </Avatar>
-        <Typography.Text className='author'>{displayName}</Typography.Text>
-        <Typography.Text className='date'>{formatTime(createdAt?.seconds)}</Typography.Text>
+        {!isSelf && (
+          <>
+            <Avatar size="small" src={photoURL}>
+              {photoURL ? '' : displayName.charAt(0).toUpperCase()}
+            </Avatar>
+            <Typography.Text className="author">{displayName}</Typography.Text>
+          </>
+        )}
+        <Typography.Text className="date">{formatTime(createdAt?.seconds)}</Typography.Text>
       </div>
 
+      <br/>
       <div>
         {
           imgUrl ? <img src={imgUrl} alt='img' className='image' /> : <Typography.Text className='content'>{text}</Typography.Text>
