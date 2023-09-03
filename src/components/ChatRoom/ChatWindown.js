@@ -1,11 +1,11 @@
-import { UserAddOutlined, UploadOutlined, MessageOutlined, SmileOutlined,RightOutlined, InfoCircleFilled, InfoCircleOutlined, InfoCircleTwoTone } from '@ant-design/icons';
+import { UserAddOutlined, UploadOutlined, MessageOutlined, SmileOutlined, InfoCircleTwoTone } from '@ant-design/icons';
 import { Alert, Avatar, Button, Form, Input, Tooltip, Upload, Modal } from 'antd';
-import React, { cloneElement, useContext, useMemo, useState, useEffect, useRef } from 'react'
+import React, { useContext, useMemo, useState, useEffect, useRef } from 'react'
 import styled from 'styled-components';
 import Message from './Message';
 import { AppContext } from '../../Context/AppProvider';
 import { AuthContext } from '../../Context/AuthProvider';
-import { addDoc, collection, query, serverTimestamp, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../firebase/config';
 import { useForm } from 'antd/es/form/Form';
@@ -43,20 +43,26 @@ const HeaderStyled = styled.div`
 const ButtonGroupStyled = styled.div`
       display: flex;
       align-items: center;
+      margin-right: ${(props) => (props.isChatInfoVisible ? '300px' : '0')};
+
 `;
 
 const WrapperStyled = styled.div`
       height: 100vh;
-
 `;
 
 const ContentStyled = styled.div`
-      height: calc(100% - 56px);
-      display: flex;
-      flex-direction: column;
-      padding: 0px;
-      justify-content: flex-end;
+  height: calc(100% - 56px);
+  display: flex;
+  flex-direction: column;
+  padding: 0px;
+  justify-content: flex-end;
+  transition: width 0.3s ease-in-out; /* Add transition for smooth animation */
+
+  /* Conditionally set the width based on isChatInfoVisible state */
+  width: ${(props) => (props.isChatInfoVisible ? "calc(100% - 320px)" : "100%")};
 `;
+
 
 
 
@@ -88,8 +94,10 @@ export default function ChatWindown() {
   const [inputValue, setInputValue] = useState('123');
   const [imagePreviewVisible, setImagePreviewVisible] = useState(false);
   const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
+  const [isChatInfoVisible, setIsChatInfoVisible] = useState(false);
+  const [selectedRoomImages, setSelectedRoomImages] = useState([]);
   const [image, setImage] = useState(null);
-  const [form] = useForm()
+  const [form] = useForm();
   const messageListRef = useRef(null);
 
   const handleInputChange = (e) => {
@@ -109,7 +117,7 @@ export default function ChatWindown() {
 
 
       if (image) {
-        const storageRef = ref(storage, 'images/' + image.name);
+        const storageRef = ref(storage, `images/chats/${selectedRoom?.name}/${image.name}`);
         const metadata = {
           contentType: 'image/*',
         };
@@ -148,19 +156,23 @@ export default function ChatWindown() {
   }, [selectedRoom?.id])
 
   const messages = useFirestore('messages', messagesCondition)
-  const [isChatInfoVisible, setIsChatInfoVisible] = useState(false);
 
-
-  const selectedRoomImages = [
-    'https://example.com/image1.jpg',
-    'https://example.com/image2.jpg',
-    'https://example.com/image3.jpg',
-    // Add more image URLs as needed
-  ];
 
   const toggleChatInfo = () => {
-    setIsChatInfoVisible((prev) => !prev); // Toggle ChatInfo visibility
+    setIsChatInfoVisible((prev) => !prev);
   };
+
+  useEffect(() => {
+    console.log(messages);
+    const RoomImages = []
+    messages.filter((message) => 'imageURL' in message)
+      .map((message) => RoomImages.push(message.imageURL))
+
+
+    console.log(RoomImages);
+    setSelectedRoomImages(RoomImages);
+
+  }, [messages]);
 
 
   useEffect(() => {
@@ -190,7 +202,7 @@ export default function ChatWindown() {
                     {selectedRoom?.description}
                   </span>
                 </div>
-                <ButtonGroupStyled>
+                <ButtonGroupStyled isChatInfoVisible={isChatInfoVisible}>
                   <Button
                     icon={<UserAddOutlined />}
                     type='text'
@@ -212,17 +224,17 @@ export default function ChatWindown() {
 
                     ))
                   }
-                  <Button 
-                  icon={<InfoCircleTwoTone/>}
-                  size='large'
-                  type='text' 
-                  onClick={toggleChatInfo}
+                  <Button
+                    icon={<InfoCircleTwoTone />}
+                    size='large'
+                    type='text'
+                    onClick={toggleChatInfo}
                   />
                 </ButtonGroupStyled>
               </HeaderStyled>
-              <ContentStyled>
+              <ContentStyled isChatInfoVisible={isChatInfoVisible}>
 
-               
+
                 <MessageListStyled ref={messageListRef}>
                   {
                     messages.map((message) => (
@@ -308,6 +320,17 @@ export default function ChatWindown() {
 
 
               </ContentStyled>
+              {isChatInfoVisible && (
+                <ChatInfo
+                  room={{
+                    avatar: selectedRoom?.imageURL,
+                    name: selectedRoom?.name,
+                    description: selectedRoom?.description,
+                    sharedImages: selectedRoomImages,
+                  }}
+
+                />
+              )}
             </>
           )
           :

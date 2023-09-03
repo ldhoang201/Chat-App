@@ -41,6 +41,7 @@ export default function AddRoom() {
         await addDoc(roomsCollection, {
             ...form.getFieldsValue(),
             members: [uid],
+            roomImage:null,
             createdAt: serverTimestamp()
         })
         setIsOpenAddRoom(false);
