@@ -1,7 +1,7 @@
 import React, { createContext, useEffect, useState } from 'react'
 import { onAuthStateChanged } from "firebase/auth";
 
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { auth } from '../firebase/config'
 import { Spin } from 'antd';
 
@@ -11,7 +11,7 @@ export default function AuthProvider({ children }) {
     const navigate = useNavigate();
     const [user, setUser] = useState({});
     const [isLoading, setIsLoading] = useState(true);
-
+    const location = useLocation();
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
@@ -31,6 +31,10 @@ export default function AuthProvider({ children }) {
                 setUser({});
                 setIsLoading(false);
                 navigate('/login');
+                if(location.pathname === '/signup')
+                {
+                    navigate('/signup');
+                }
             }
         });
         //clean function

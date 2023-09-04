@@ -45,7 +45,7 @@ export default function RoomList() {
 
   return (
     <Collapse ghost>
-      <PanelStyled header='danh sach cach phong' key='1'>
+      <PanelStyled header='Room List' key='1'>
         {
           rooms.map((room) =>
             <LinkStyled onClick={() => setSelectedRoomId(room.id)} key={room.id}>{room.name}</LinkStyled>
@@ -55,7 +55,7 @@ export default function RoomList() {
           className='add-room'
           icon={<PlusSquareOutlined />}
           onClick={handleAddRoom}
-        >Them phong
+        >Add Room
         </Button>
       </PanelStyled>
     </Collapse>

@@ -208,7 +208,7 @@ export default function ChatWindown() {
                     type='text'
                     onClick={() => setIsOpenInviteMember(true)}
                   >
-                    Moi
+                    Invite
                   </Button>
                   {
                     members.map(member => (
@@ -327,6 +327,7 @@ export default function ChatWindown() {
                     name: selectedRoom?.name,
                     description: selectedRoom?.description,
                     sharedImages: selectedRoomImages,
+                    members: members
                   }}
 
                 />

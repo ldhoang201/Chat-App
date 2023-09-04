@@ -24,7 +24,7 @@ export default function AddRoom() {
 
             if (!roomQuerySnapshot.empty) {
                 message.error({
-                    content: 'Phong da ton tai',
+                    content: 'Room existed!',
                     'duration': 3
                 });
                 return;
@@ -32,7 +32,7 @@ export default function AddRoom() {
         }
         else {
             message.error({
-                content: 'Hay nhap ten phong',
+                content: 'Input rooms name',
                 'duration': 3
             })
             return;

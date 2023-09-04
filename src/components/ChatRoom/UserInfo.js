@@ -69,7 +69,7 @@ export default function UserInfo() {
                 <Typography.Text className='username'>{displayName}</Typography.Text>
             </div>
             <Button ghost onClick={() => handleLogout()}>
-                Dang Xuat
+                Log out
             </Button>
         </WrapperStyled>
     )

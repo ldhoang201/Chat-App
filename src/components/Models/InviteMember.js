@@ -108,7 +108,7 @@ export default function InviteMember() {
     return (
         <div>
             <Modal
-                title='Moi them thanh vien'
+                title='Invite a member'
                 open={isOpenInviteMember}
                 onOk={handleOk}
                 onCancel={handleCancel}
@@ -117,9 +117,9 @@ export default function InviteMember() {
                     <DebounceSelect
                         mode='multiple'
                         name='search-user'
-                        label='Ten cac thanh vien'
+                        label='Users name'
                         value={value}
-                        placeholder="Nhap ten thanh vien"
+                        placeholder="Input username"
                         fetchOption={fetchUserList}
                         onChange={newValue => setValue(newValue)}
                         style={{ width: '100%' }}
