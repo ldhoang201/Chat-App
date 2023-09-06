@@ -1,5 +1,5 @@
 import { UserAddOutlined, UploadOutlined, MessageOutlined, SmileOutlined, InfoCircleTwoTone } from '@ant-design/icons';
-import { Alert, Avatar, Button, Form, Input, Tooltip, Upload, Modal } from 'antd';
+import { Alert, Avatar, Button, Form, Input, Tooltip, Upload, Modal, Mentions, Image } from 'antd';
 import React, { useContext, useMemo, useState, useEffect, useRef } from 'react'
 import styled from 'styled-components';
 import Message from './Message';
@@ -83,29 +83,47 @@ const FormStyled = styled(Form)`
 const MessageListStyled = styled.div`
       max-height: 100%;
       overflow-y: auto;
-      margin-left:20px
+      margin-left:20px;
+      overflow-wrap: break-word;
 `;
 
+
+const { Option } = Mentions;
 
 export default function ChatWindown() {
 
   const { selectedRoom, members, setIsOpenInviteMember } = useContext(AppContext);
   const { user: { uid, photoURL, displayName } } = useContext(AuthContext);
-  const [inputValue, setInputValue] = useState('123');
-  const [imagePreviewVisible, setImagePreviewVisible] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewVisible, setPreviewVisible] = useState(false);
   const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
   const [isChatInfoVisible, setIsChatInfoVisible] = useState(false);
   const [selectedRoomImages, setSelectedRoomImages] = useState([]);
-  const [image, setImage] = useState(null);
+  const [selectedRoomFiles, setSelectedRoomFiles] = useState([]);
   const [form] = useForm();
   const messageListRef = useRef(null);
 
-  const handleInputChange = (e) => {
-    setInputValue(e.target.value)
+
+  const handleInputChange = (value) => {
+    setInputValue(value)
   }
 
+  const isImageFile = (file) => {
+    return file.type.startsWith('image/');
+  };
+
+  const isImageType = (url) => {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp'];
+    const fileExtension = url
+      .substring(0, url.indexOf('?'))
+      .substring(url.lastIndexOf('.'))
+      .toLowerCase();
+    return imageExtensions.includes(fileExtension);
+  };
+
   const handleOnSubmit = async () => {
-    if (inputValue || image) {
+    if (inputValue || selectedFile) {
       const messageData = {
         text: inputValue,
         uid,
@@ -116,12 +134,12 @@ export default function ChatWindown() {
       };
 
 
-      if (image) {
-        const storageRef = ref(storage, `images/chats/${selectedRoom?.name}/${image.name}`);
+      if (selectedFile) {
+        const storageRef = ref(storage, `files/${selectedRoom?.name}/${selectedFile.name}`);
         const metadata = {
-          contentType: 'image/*',
+          contentType: selectedFile.type,
         };
-        await uploadBytes(storageRef, image, metadata).then((snapshot) => {
+        await uploadBytes(storageRef, selectedFile, metadata).then((snapshot) => {
           console.log('Uploaded a blob or file!');
         })
           .catch((err) => {
@@ -129,21 +147,21 @@ export default function ChatWindown() {
           })
 
         await getDownloadURL(storageRef).then((url) => {
-          messageData['imageURL'] = url
+          messageData['fileURL'] = url
         })
           .catch((err) => {
             console.log(err);
           })
 
-        setImagePreviewVisible(false);
+        setPreviewVisible(false);
       }
 
       console.log(messageData);
 
       await addDoc(collection(db, 'messages'), messageData);
 
-      form.resetFields(['message', 'image']);
-      setImage(null);
+      form.resetFields(['message', 'upload-files']);
+      setSelectedFile(null);
     }
   };
 
@@ -162,15 +180,26 @@ export default function ChatWindown() {
     setIsChatInfoVisible((prev) => !prev);
   };
 
+
+
   useEffect(() => {
-    console.log(messages);
-    const RoomImages = []
-    messages.filter((message) => 'imageURL' in message)
-      .map((message) => RoomImages.push(message.imageURL))
+    const RoomImages = [];
+    const RoomFiles = [];
 
 
-    console.log(RoomImages);
+    messages.filter((message) => (
+      'fileURL' in message && isImageType(message.fileURL)
+    ))
+      .map((message) => RoomImages.push(message.fileURL))
+
     setSelectedRoomImages(RoomImages);
+
+    messages.filter((message) => (
+      'fileURL' in message && !isImageType(message.fileURL)
+    ))
+      .map((message) => RoomFiles.push(message.fileURL))
+
+    setSelectedRoomFiles(RoomFiles)
 
   }, [messages]);
 
@@ -244,57 +273,44 @@ export default function ChatWindown() {
                         photoURL={message.photoURL}
                         displayName={message.displayName}
                         createdAt={message.createdAt}
-                        imgUrl={message.imageURL}
+                        fileURL={message.fileURL}
                         uid={message.uid}
                       />
                     ))
                   }
                 </MessageListStyled>
                 <FormStyled form={form}>
-                  <Form.Item name='upload-image' style={{ flex: 'none' }}>
+                  <Form.Item name='upload-files' style={{ flex: 'none' }}>
                     <Upload
-                      accept='image/*'
+                      accept='image/*, .pdf, .doc, .docx, .txt'
                       showUploadList={false}
                       customRequest={({ file }) => {
-                        setImage(file);
+                        setSelectedFile(file);
                       }}
                       onChange={(info) => {
                         console.log('File onChange event:', info);
-                        setImagePreviewVisible(true);
+                        setPreviewVisible(true);
                       }}
                     >
                       <Button icon={<UploadOutlined />} />
                     </Upload>
                   </Form.Item>
                   <Form.Item name='message' style={{ flex: 1, marginBottom: 0 }}>
-                    <Input
+                    <Mentions
+                      value={inputValue}
                       onChange={handleInputChange}
                       onPressEnter={handleOnSubmit}
-                      bordered={false}
-                      autoComplete='off'
-                      placeholder='Nhập tin nhắn'
-                      value='123'
-                      prefix={<MessageOutlined />}
-                      suffix={
-                        <>
-                          <Button icon={<SmileOutlined />} onClick={() => setIsEmojiPickerVisible(true)} />
-                          <Modal
-                            title="Chọn biểu tượng"
-                            open={isEmojiPickerVisible}
-                            onCancel={() => setIsEmojiPickerVisible(false)}
-                            footer={null}
-                          >
-                            <Picker
-                              data={data}
-                              onEmojiSelect={(emoji) => {
-                                setIsEmojiPickerVisible(false);
-                                setInputValue(prevValue => prevValue + emoji.native);
-                              }}
-                            />
-                          </Modal>
-                        </>
+                      style={{ flex: 1, marginBottom: 0 }}
+                      placeholder="Nhập tin nhắn"
+                      options={
+                        members.filter(member => member.uid !== uid)
+                          .map(member => ({
+                            value: member.displayName,
+                            label: member.displayName
+                          }))
                       }
-                    />
+                    >
+                    </Mentions>
                   </Form.Item>
 
                   <Button
@@ -305,17 +321,28 @@ export default function ChatWindown() {
                   </Button>
                 </FormStyled>
 
-
                 <Modal
-                  open={imagePreviewVisible}
-                  onCancel={() => setImagePreviewVisible(false)}
+                  open={previewVisible}
+                  onCancel={() => setPreviewVisible(false)}
                   footer={[
-                    <Button key="submit" type="primary" onClick={handleOnSubmit}>
+                    <Button key="submit" type="primary" onClick={handleOnSubmit} style={{ alignSelf: 'center' }}>
                       Gửi
                     </Button>,
                   ]}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                  {image && <img src={URL.createObjectURL(image)} alt="Preview" style={{ maxWidth: '100%' }} />}
+                  {selectedFile && isImageFile(selectedFile) ? (
+                    <Image
+                      src={URL.createObjectURL(selectedFile)}
+                      alt="Preview"
+                      style={{ maxWidth: '100%', maxHeight: '60%', marginTop: '20px', display: 'block', borderRadius: '20px' }}
+                    />
+                  ) : (
+                    <div>
+                      <p>Tên tệp: {selectedFile?.name}</p>
+                      <p>Kích thước: {selectedFile?.size} bytes</p>
+                    </div>
+                  )}
                 </Modal>
 
 
@@ -327,6 +354,7 @@ export default function ChatWindown() {
                     name: selectedRoom?.name,
                     description: selectedRoom?.description,
                     sharedImages: selectedRoomImages,
+                    sharedFiles: selectedRoomFiles,
                     members: members
                   }}
 
@@ -336,7 +364,7 @@ export default function ChatWindown() {
           )
           :
           <Alert
-            message='Hay chon phong'
+            message='Select a room to chat'
             type='info'
             showIcon
             closable

@@ -1,10 +1,10 @@
 import React, { useContext, useState } from 'react';
 import styled from 'styled-components';
-import { Avatar, Modal, Image, Upload, message, Button, Spin, List, Tooltip } from 'antd';
+import { Avatar, Modal, Image, Upload, message, Button, Spin, List, Tooltip, Space } from 'antd';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../firebase/config';
-import { EditOutlined, CameraOutlined, UploadOutlined, } from '@ant-design/icons';
+import { EditOutlined, CameraOutlined, UploadOutlined, FilePdfOutlined, FileWordOutlined } from '@ant-design/icons';
 import { AppContext } from '../../Context/AppProvider';
 
 const ChatInfoWrapper = styled.div`
@@ -88,12 +88,29 @@ const StyledAvatar = styled(Avatar)`
     }
 `;
 
+const FileList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+`;
+
+const FileItem = styled.div`
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+`;
+
+
+
 
 const ChatInfo = ({ room }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [newRoomImage, setNewRoomImage] = useState(room.roomImage || '');
     const [uploading, setUploading] = useState(false);
     const { selectedRoom } = useContext(AppContext);
+
+    console.log(room.sharedFiles);
 
     const showModal = () => {
         setIsModalVisible(true);
@@ -114,6 +131,25 @@ const ChatInfo = ({ room }) => {
             message.error(`Update Room Image failed.`);
         }
     };
+
+    const getFileTypeIcon = (file) => {
+        const fileExtension = file.split('.').pop().toLowerCase();
+        if (fileExtension === 'pdf') {
+            return <FilePdfOutlined className="file-icon" />;
+        } else if (fileExtension === 'docx') {
+            return <FileWordOutlined className="file-icon" />;
+        }
+       
+        return null; 
+    };
+
+    const getFileName = (url) => {
+        const parts = url.split('/');
+        const lastPart = parts[parts.length - 1].split('?')[0];
+        const decodeFileName = decodeURIComponent(lastPart);
+    
+        return decodeFileName.split('/')[2];
+      }
 
     const customRequest = async ({ file, onSuccess, onError }) => {
         setUploading(true);
@@ -184,6 +220,21 @@ const ChatInfo = ({ room }) => {
                     </ImageItem>
                 ))}
             </ImageList>
+            <h3>File Shared in Chat:</h3>
+            <FileList>
+                {room.sharedFiles &&
+                    room.sharedFiles.map((file, index) => (
+                        <FileItem key={index}>
+                            {getFileTypeIcon(file)} {/* Display the file type icon */}
+                            <Space>
+                                <a href={file} target="_blank" rel="noopener noreferrer">
+                                    {getFileName(file)}
+                                </a>
+                            </Space>
+                        </FileItem>
+                    ))}
+            </FileList>
+
             <Modal
                 open={isModalVisible}
                 onCancel={handleCancel}

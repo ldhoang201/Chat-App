@@ -82,12 +82,13 @@ export default function SignUp() {
             await updateProfile(auth.currentUser, { displayName: username, photoURL: userPhotoURL });
 
             console.log(auth.currentUser);
+            setLoading(false); // Stop loading
+            message.success('Sign up successfully.');
+            window.location.reload();
 
             // // Store the user's profile data in Firestore
             await addUserProfileToFirestore(auth.currentUser.uid, username, userPhotoURL);
 
-            setLoading(false); // Stop loading
-            message.success('Sign up successfully.');
         } catch (error) {
             setLoading(false); // Stop loading
             message.error('Sign up failed.');

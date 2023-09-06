@@ -78,8 +78,8 @@ export default function Login() {
                     })
                 }
             })
-
         }
+        message.success('Login successfully.');
     }
 
     return (
@@ -92,7 +92,7 @@ export default function Login() {
                             <InputContainer>
                                 <Form.Item label="Email" style={{ width: '90%' }}>
                                     <Input
-                                    style={{marginLeft:'28px'}}
+                                        style={{ marginLeft: '28px' }}
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
