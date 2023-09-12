@@ -1,76 +1,60 @@
-import { Avatar, Button, Typography } from 'antd'
-import React, { useContext, useEffect } from 'react'
-import { styled } from 'styled-components'
+import React, { useContext } from 'react';
 import { signOut } from 'firebase/auth';
-import { auth, db } from '../../firebase/config';
-import { onSnapshot, collection, query, orderBy, updateDoc, doc, getDoc, where, } from 'firebase/firestore';
+import { Avatar, Button, Typography, Space } from 'antd';
+import styled from 'styled-components';
 import { AuthContext } from '../../Context/AuthProvider';
+import { auth } from '../../firebase/config';
 
-const WrapperStyled = styled.div`
+const UserInfoWrapper = styled.div`
   display: flex;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(82, 38, 83);
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+
+  .ant-avatar {
+    background-color: #663399;
+    border: 2px solid white;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    font-size: 24px;
+  }
 
   .username {
     color: white;
-    margin-left: 5px;
+    font-size: 18px;
+    margin-top: 8px;
+  }
+
+  .logout-button {
+    color: white;
+    border: none;
+    background: none;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: color 0.3s;
+
+    &:hover {
+      color: #ff4d4f;
+    }
   }
 `;
 
 export default function UserInfo() {
+  const { user: { displayName, photoURL } } = useContext(AuthContext);
 
-    // useEffect(() => {
-    //     const userCollection = collection(db, 'messages');
-    //     const q = query(userCollection, orderBy('createdAt'));
-    //     onSnapshot(q, ((snapshot) => {
-    //         const data = snapshot.docs.map(doc => ({
-    //             ...doc.data(),
-    //             id: doc.id
-    //         }))
+  const handleLogout = async () => {
+    await signOut(auth);
+  };
 
-    //         console.log({ data, snapshot, docs: snapshot.docs });
-    //     }))
-    // }, [])
-
-    const { user: {
-        displayName,
-        photoURL,
-        uid
-    } } = useContext(AuthContext);
-
-    console.log(uid);
-
-    const handleLogout = async () => {
-        // await updateDoc(doc(db, 'users', uid), {
-        //     isOnline: false
-        // })
-
-        await signOut(auth);
-    };
-
-
-
-
-
-
-    // useEffect(async () => {
-    //     const docSnap = await getDoc(doc(db, 'users', uid));
-    //     console.log(docSnap.data());
-    //     return () => {
-    //         docSnap();
-    //     }
-    // }, [])
-
-    return (
-        <WrapperStyled>
-            <div>
-                <Avatar src={photoURL}>{photoURL ? '' : displayName?.charAt(0)?.toUpperCase()}</Avatar>
-                <Typography.Text className='username'>{displayName}</Typography.Text>
-            </div>
-            <Button ghost onClick={() => handleLogout()}>
-                Log out
-            </Button>
-        </WrapperStyled>
-    )
+  return (
+    <UserInfoWrapper>
+      <Avatar src={photoURL} size={64}>
+        {photoURL ? '' : displayName?.charAt(0)?.toUpperCase()}
+      </Avatar>
+      <Typography.Text className='username'>{displayName}</Typography.Text>
+      <Button className='logout-button' onClick={() => handleLogout()}>
+        Log out
+      </Button>
+    </UserInfoWrapper>
+  );
 }

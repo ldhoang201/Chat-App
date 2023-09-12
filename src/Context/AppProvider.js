@@ -3,6 +3,7 @@ import useFirestore from "../hooks/useFirestore";
 import { AuthContext } from "./AuthProvider";
 
 
+
 export const AppContext = createContext();
 
 export default function AppProvider({ children }) {
@@ -11,6 +12,8 @@ export default function AppProvider({ children }) {
     const [selectedRoomId, setSelectedRoomId] = useState('');
     const [isOpenInviteMember, setIsOpenInviteMember] = useState(false);
     const { user: { uid } } = useContext(AuthContext);
+
+    
 
     const roomsCondition = useMemo(() => {
         return {

@@ -35,8 +35,7 @@ export default function Login() {
 
     const handleEmailLogin = async () => {
         try {
-            console.log(email);
-            console.log(password);
+
             await signInWithEmailAndPassword(auth, email, password);
             message.success('Login successfully.');
         } catch (error) {
@@ -63,7 +62,6 @@ export default function Login() {
             })
         }
         else {
-            console.log(user.uid);
             const userCollection = collection(db, 'users');
             const q = query(userCollection, where('uid', '==', user.uid));
 

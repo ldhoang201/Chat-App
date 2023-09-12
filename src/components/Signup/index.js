@@ -61,7 +61,6 @@ export default function SignUp() {
             setUserPhotoURL(imageUrl);
             onSuccess();
             setUploading(false);
-            console.log(form.getFieldsValue());
         } catch (error) {
             onError(error);
             setUploading(false);

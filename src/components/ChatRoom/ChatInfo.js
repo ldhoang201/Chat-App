@@ -84,7 +84,7 @@ const StyledAvatar = styled(Avatar)`
     cursor: pointer;
     margin-right: 20px;
     &:hover {
-        border: 2px solid #1890ff; // Màu viền khi hover
+        border: 2px solid #1890ff; 
     }
 `;
 
@@ -110,7 +110,6 @@ const ChatInfo = ({ room }) => {
     const [uploading, setUploading] = useState(false);
     const { selectedRoom } = useContext(AppContext);
 
-    console.log(room.sharedFiles);
 
     const showModal = () => {
         setIsModalVisible(true);
@@ -173,7 +172,7 @@ const ChatInfo = ({ room }) => {
 
         try {
             await updateDoc(roomRef, { imageURL: imageUrl });
-            // Cập nhật thành công, tôi không cần thực hiện bất kỳ xử lý nào khác ở đây
+
         } catch (error) {
             console.error('Lỗi khi cập nhật hình ảnh phòng:', error);
             message.error('Có lỗi xảy ra khi cập nhật hình ảnh phòng');
@@ -238,7 +237,7 @@ const ChatInfo = ({ room }) => {
             <Modal
                 open={isModalVisible}
                 onCancel={handleCancel}
-                title="Cập Nhật Ảnh Phòng"
+                title="Update Room Image"
                 footer={null}
                 centered
             >

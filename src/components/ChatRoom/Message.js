@@ -1,9 +1,12 @@
-import { Avatar, Typography, Image } from 'antd';
+import { Avatar, Typography, Image, Tooltip, message } from 'antd';
 import React, { useContext, useState } from 'react';
 import { styled } from 'styled-components';
 import { formatRelative } from 'date-fns';
 import { AuthContext } from '../../Context/AuthProvider';
 import { AppContext } from '../../Context/AppProvider';
+import DocViewer, { DocViewerRenderers } from "@cyntler/react-doc-viewer";
+
+
 
 const WrapperStyled = styled.div`
   margin-bottom: 15px;
@@ -25,7 +28,13 @@ const WrapperStyled = styled.div`
     color: #a7a7a7;
   }
 
-  /* CSS */
+  .seen-list {
+    display: flex;
+    margin-left: 16px;
+    margin-top: 2px;
+  }
+
+
   .content {
     display: inline-block;
     padding: 8px;
@@ -49,11 +58,12 @@ const formatTime = (seconds) => {
   return formattedTime;
 };
 
-export default function Message({ fileURL, text, displayName, createdAt, photoURL, uid }) {
+export default function Message({ fileURL, text, displayName, createdAt, photoURL, uid, seenList, isLatest }) {
   const { user } = useContext(AuthContext);
   const { members } = useContext(AppContext);
   const isSelf = uid === user.uid;
 
+  console.log(isLatest);
 
   const formatText = (text) => {
     const tagRegex = /@(\w+)/g;
@@ -66,6 +76,19 @@ export default function Message({ fileURL, text, displayName, createdAt, photoUR
         return part;
       }
     });
+  };
+
+  const formatSeenByMessage = (seenList, members) => {
+    const seenUsers = seenList.map((seenUid) => {
+      const seenUser = members.find((member) => member.uid === seenUid);
+      return seenUser ? seenUser.displayName : seenUid;
+    });
+
+    if (seenUsers.length > 0) {
+      return `Seen by ${seenUsers.join(' and ')}`;
+    }
+
+    return '';
   };
 
 
@@ -86,6 +109,28 @@ export default function Message({ fileURL, text, displayName, createdAt, photoUR
 
     return decodeFileName.split('/')[2];
   }
+
+  const renderDocument = (fileURL) => {
+    // const docs = [
+    //   {
+    //     uri: fileURL,
+    //     fileName: getFileName(fileURL)
+    //   }
+    // ];
+    // console.log(docs);
+    // return <DocViewer prefetchMethod='GET' documents={docs} pluginRenderers={DocViewerRenderers} />;
+
+    return (
+      <a href={fileURL} target="_blank" rel="noopener noreferrer" className="content">
+        {getFileName(fileURL)}
+      </a>
+    );
+
+  };
+
+  const seenByMessage = formatSeenByMessage(seenList, members);
+
+  const seenListWithoutSender = seenList.filter((seenUid) => seenUid !== uid);
 
 
   return (
@@ -108,21 +153,39 @@ export default function Message({ fileURL, text, displayName, createdAt, photoUR
           <div>
             {isImageFile(fileURL) ? (
               <div>
-                <Image src={fileURL}
-                  alt="img"
-                  className="image"
-                  style={{ cursor: 'pointer',borderRadius: '10px' }} />
+                <Image src={fileURL} alt="img" className="image" style={{ cursor: 'pointer', borderRadius: '10px' }} />
               </div>
             ) : (
-              <a href={fileURL} target="_blank" rel="noopener noreferrer">
-                {getFileName(fileURL)}
-              </a>
+              renderDocument(fileURL)
             )}
           </div>
         ) : (
-          <Typography.Text className='content'>{formatText(text)}</Typography.Text>
+          <>
+            <Typography.Text className="content">
+              {formatText(text)}
+            </Typography.Text>
+            {seenListWithoutSender.length > 0 && (
+              <Avatar.Group size="small" maxCount={2} className='seen-list'>
+                <Tooltip title={`Seen by ${seenListWithoutSender.map(seenUid => {
+                  const seenUser = members.find(member => member.uid === seenUid);
+                  return seenUser ? seenUser.displayName : seenUid;
+                }).join(', ')}`}>
+                  {seenListWithoutSender.map((seenUid) => {
+                    const seenUser = members.find((member) => member.uid === seenUid);
+                    return (
+                      <Avatar key={seenUid} src={seenUser ? seenUser.photoURL : ''}>
+                        {seenUser ? '' : seenUid.charAt(0).toUpperCase()}
+                      </Avatar>
+                    );
+                  })}
+                </Tooltip>
+              </Avatar.Group>
+            )}
+
+          </>
         )}
       </div>
     </WrapperStyled>
   );
+
 }
