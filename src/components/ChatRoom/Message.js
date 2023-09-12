@@ -1,4 +1,5 @@
-import { Avatar, Typography, Image, Tooltip, message } from 'antd';
+import { Avatar, Typography, Image, Tooltip } from 'antd';
+import { FileWordTwoTone, FilePdfTwoTone, FileExcelTwoTone, FileTextTwoTone, FileTwoTone } from '@ant-design/icons';
 import React, { useContext, useState } from 'react';
 import { styled } from 'styled-components';
 import { formatRelative } from 'date-fns';
@@ -111,21 +112,38 @@ export default function Message({ fileURL, text, displayName, createdAt, photoUR
   }
 
   const renderDocument = (fileURL) => {
-    // const docs = [
-    //   {
-    //     uri: fileURL,
-    //     fileName: getFileName(fileURL)
-    //   }
-    // ];
-    // console.log(docs);
-    // return <DocViewer prefetchMethod='GET' documents={docs} pluginRenderers={DocViewerRenderers} />;
-
-    return (
-      <a href={fileURL} target="_blank" rel="noopener noreferrer" className="content">
-        {getFileName(fileURL)}
-      </a>
-    );
-
+    // Define a mapping of file extensions to Ant Design icons
+    const fileIcons = {
+      '.pdf': <FilePdfTwoTone size='large' style={{fontSize: '18px'}} twoToneColor="#ff5722" />,
+      '.doc': <FileWordTwoTone size='large' style={{fontSize: '18px'}} twoToneColor="#007acc" />,
+      '.docx': <FileWordTwoTone size='large' style={{fontSize: '18px'}} twoToneColor="#007acc" />,
+      '.xls': <FileExcelTwoTone size='large' style={{fontSize: '18px'}} twoToneColor="#4caf50" />,
+      '.xlsx': <FileExcelTwoTone size='large' style={{fontSize: '18px'}} twoToneColor="#4caf50" />,
+      '.txt': <FileTextTwoTone size='large' style={{fontSize: '18px'}} twoToneColor="#333" />,
+    };
+  
+    // Get the file extension from the file URL
+    const fileExtension = fileURL
+      .substring(0, fileURL.indexOf('?'))
+      .substring(fileURL.lastIndexOf('.'))
+      .toLowerCase();
+  
+    // Check if the file extension is in the mapping
+    if (fileIcons[fileExtension]) {
+      // Render a clickable link with the file icon
+      return (
+        <a href={fileURL} target="_blank" rel="noopener noreferrer" className='content'>
+          {fileIcons[fileExtension]} {getFileName(fileURL)}
+        </a>
+      );
+    } else {
+      // Default to a generic file icon if the type is not recognized
+      return (
+        <a href={fileURL} target="_blank" rel="noopener noreferrer" className='content'>
+          <FileTwoTone twoToneColor="#999" />
+        </a>
+      );
+    }
   };
 
   const seenByMessage = formatSeenByMessage(seenList, members);

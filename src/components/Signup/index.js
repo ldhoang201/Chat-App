@@ -23,7 +23,9 @@ const SignUpContainer = styled.div`
 const FormContainer = styled.div`
     max-width: 400px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 30px;
+    padding-left: 80px;
+    padding-right: 80px;
     border: 1px solid #ccc;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -36,20 +38,21 @@ const InputContainer = styled.div`
 `;
 
 const SignUpButton = styled(Button)`
-    width: 100%;
+    width: 40%;
     margin-top: 16px;
+    margin-left: 150px;
 `;
 
 export default function SignUp() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [username, setUsername] = useState('');
     const [userPhotoURL, setUserPhotoURL] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [form] = useForm();
-
 
     const customRequest = async ({ file, onSuccess, onError }) => {
         setUploading(true);
@@ -69,31 +72,25 @@ export default function SignUp() {
 
     const handleRegister = async () => {
         try {
-            setLoading(true); // Start loading
+            setLoading(true);
 
             // Create a new user with email and password
             await createUserWithEmailAndPassword(auth, email, password);
 
-            // Get the user's UID
-            console.log(username)
-            console.log(userPhotoURL)
-
+            // Update user profile
             await updateProfile(auth.currentUser, { displayName: username, photoURL: userPhotoURL });
 
-            console.log(auth.currentUser);
-            setLoading(false); // Stop loading
+            setLoading(false);
             message.success('Sign up successfully.');
             window.location.reload();
 
-            // // Store the user's profile data in Firestore
+            // Store the user's profile data in Firestore
             await addUserProfileToFirestore(auth.currentUser.uid, username, userPhotoURL);
 
         } catch (error) {
-            setLoading(false); // Stop loading
+            setLoading(false);
             message.error('Sign up failed.');
         }
-
-        // console.log(form.getFieldsValue());
     };
 
     const addUserProfileToFirestore = async (uid, displayName, photoURL) => {
@@ -130,10 +127,30 @@ export default function SignUp() {
                         Create an account
                     </Title>
                     <FormContainer>
-                        <Form form={form}>
+                        <Form
+                            form={form}
+                            onFinish={handleRegister}
+                            onFinishFailed={(errorInfo) => {
+                                console.log('Failed:', errorInfo);
+                            }}
+                            labelCol={{ span: 8 }} 
+                            wrapperCol={{ span: 16 }} 
+                        >
                             <InputContainer>
-                                <Form.Item label="Email" name='email'>
+                                <Form.Item
+                                    label="Email"
+                                    name='email'
+                                    hasFeedback
+                                    rules={[
+                                        {
+                                            required: true,
+                                            type: 'email',
+                                            message: 'Please enter a valid email address',
+                                        },
+                                    ]}
+                                >
                                     <Input
+                                        placeholder="Enter your email"
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -141,16 +158,66 @@ export default function SignUp() {
                                 </Form.Item>
                             </InputContainer>
                             <InputContainer>
-                                <Form.Item label="Password" name='password'>
+                                <Form.Item
+                                    label="Password"
+                                    name='password'
+                                    hasFeedback
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Please enter your password',
+                                        },
+                                    ]}
+                                >
                                     <Input.Password
+                                        placeholder="Enter your password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                     />
                                 </Form.Item>
                             </InputContainer>
                             <InputContainer>
-                                <Form.Item label="Username" name='username'>
+                                <Form.Item
+                                    label="Confirm Password"
+                                    name='confirmPassword'
+                                    hasFeedback
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Please confirm your password',
+                                        },
+                                        ({ getFieldValue }) => ({
+                                            validator(_, value) {
+                                                if (!value || getFieldValue('password') === value) {
+                                                    return Promise.resolve();
+                                                }
+                                                return Promise.reject(
+                                                    new Error('The two passwords do not match')
+                                                );
+                                            },
+                                        }),
+                                    ]}
+                                >
+                                    <Input.Password
+                                        placeholder="Confirm your password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+                                </Form.Item>
+                            </InputContainer>
+                            <InputContainer>
+                                <Form.Item
+                                    label="Username"
+                                    name='username'
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Please enter your username',
+                                        },
+                                    ]}
+                                >
                                     <Input
+                                        placeholder="Enter your username"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
                                     />
@@ -171,10 +238,12 @@ export default function SignUp() {
                                     </Upload>
                                 </Form.Item>
                             </InputContainer>
-                            <Form.Item>
+                            <Form.Item
+                                style={{ width: '100%' }}
+                            >
                                 <SignUpButton
                                     type="primary"
-                                    onClick={handleRegister}
+                                    htmlType="submit"
                                     loading={loading}
                                 >
                                     Sign Up

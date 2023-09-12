@@ -9,6 +9,7 @@ import { FacebookOutlined, GoogleOutlined } from '@ant-design/icons';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { useForm } from 'antd/es/form/Form';
 
 const { Title } = Typography;
 const { Item } = Form;
@@ -32,6 +33,7 @@ export default function Login() {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [form] = useForm();
 
     const handleEmailLogin = async () => {
         try {
@@ -86,9 +88,21 @@ export default function Login() {
                 <Col span={8}>
                     <Title style={{ textAlign: 'center' }} level={3}>Welcome to Chat App</Title>
                     <FormContainer>
-                        <Form>
+                        <Form form={form}>
                             <InputContainer>
-                                <Form.Item label="Email" style={{ width: '90%' }}>
+                                <Form.Item
+                                    label="Email"
+                                    style={{ width: '90%' }}
+                                    hasFeedback
+                                    rules={
+                                        [
+                                            {
+                                                required: true,
+                                                message: 'Please enter a validate email',
+                                            }
+                                        ]
+                                    }
+                                >
                                     <Input
                                         style={{ marginLeft: '28px' }}
                                         type="email"
@@ -98,7 +112,18 @@ export default function Login() {
                                 </Form.Item>
                             </InputContainer>
                             <InputContainer>
-                                <Form.Item label="Password">
+                                <Form.Item
+                                    label="Password"
+                                    hasFeedback
+                                    rules={
+                                        [
+                                            {
+                                                required: true,
+                                                message: 'Please enter your password',
+                                            }
+                                        ]
+                                    }
+                                >
                                     <Input.Password
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}

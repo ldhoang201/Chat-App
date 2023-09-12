@@ -201,6 +201,7 @@ export default function ChatWindown() {
       markMessageAsSeen(newMessageRef.id, uid);
 
       form.resetFields(['message', 'upload-files']);
+      setInputValue('');
       setSelectedFile(null);
     }
   };
