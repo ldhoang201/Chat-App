@@ -11,7 +11,8 @@ import DocViewer, { DocViewerRenderers } from "@cyntler/react-doc-viewer";
 
 const WrapperStyled = styled.div`
   margin-bottom: 15px;
-
+  
+  
   .image {
     max-width: 200px;
     max-height: 200px;
@@ -43,7 +44,7 @@ const WrapperStyled = styled.div`
     border: 1px solid ${(props) => (props.isSelf ? '#0084FF' : '#E4E6EB')};
     background-color: ${(props) => (props.isSelf ? '#0084FF' : '#E4E6EB')};
     color: ${(props) => (props.isSelf ? '#FFF' : '#000')};
-    max-width:${(props) => (props.isSelf ? '95%' : '17%')};
+    max-width:${(props) => (props.isSelf ? '85%' : '17%')}; 
   }
 
   margin-left: ${(props) => (props.isSelf ? '80%' : '0px')};
@@ -182,7 +183,7 @@ export default function Message({ fileURL, text, displayName, createdAt, photoUR
             <Typography.Text className="content">
               {formatText(text)}
             </Typography.Text>
-            {seenListWithoutSender.length > 0 && (
+            {isLatest && seenListWithoutSender.length > 0 && (
               <Avatar.Group size="small" maxCount={2} className='seen-list'>
                 <Tooltip title={`Seen by ${seenListWithoutSender.map(seenUid => {
                   const seenUser = members.find(member => member.uid === seenUid);

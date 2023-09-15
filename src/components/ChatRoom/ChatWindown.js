@@ -133,18 +133,18 @@ export default function ChatWindown() {
   const markMessageAsSeen = async (messageId, seenUid) => {
     const messageRef = doc(db, 'messages', messageId);
 
-    // Get the message data from Firestore
+
     const messageDoc = await getDoc(messageRef);
 
     if (messageDoc.exists()) {
-      // Check if the UID of the user has already been added to the "seenBy" list
+
       const seenBy = messageDoc.data().seenBy || [];
 
       if (!seenBy.includes(seenUid)) {
-        // If the UID is not in the list, add it
+
         seenBy.push(seenUid);
 
-        // Update the "seen" status and the "seenBy" list in the message document
+
         await updateDoc(messageRef, {
           seenBy: seenBy,
         });
@@ -254,7 +254,7 @@ export default function ChatWindown() {
       // Mark each message as seen by the current user
       markMessageAsSeen(message.id, uid);
     });
-  }, [selectedRoom?.id]);
+  }, [selectedRoom?.id, messages]);
 
 
 
@@ -304,21 +304,43 @@ export default function ChatWindown() {
           const newMessage = document.data();
 
 
-          if (newMessage.roomId !== selectedRoom.id && newMessage.uid !== uid) {
+          if (newMessage.roomId !== selectedRoom.id && !newMessage.seenBy.includes(uid)) {
             const roomRef = doc(db, 'rooms', newMessage.roomId);
             const roomSnapshot = await getDoc(roomRef);
             const roomData = roomSnapshot.data();
             const notifiKey = `new-message-${roomData.id}`
 
-            notification.open({
-              key: notifiKey,
-              message: `${newMessage.displayName} to ${roomData.name} : ${newMessage.text}`,
-              duration: 2,
-              onClick: () => {
-                setSelectedRoomId(newMessage.roomId);
-                notification.destroy(notifiKey);
-              }
-            });
+            const matchingUser = members.find((member) => member.uid === newMessage.uid);
+
+            if (matchingUser) {
+              notification.open({
+                key: notifiKey,
+                onClick: () => {
+                  setSelectedRoomId(newMessage.roomId);
+                  notification.destroy(notifiKey);
+                },
+                message: (
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                        {matchingUser.displayName} to {roomData.name}
+                      </div>
+                      <div style={{ fontSize: 14 }}>{newMessage.text}</div>
+                    </div>
+                  </div>
+                ),
+                duration: 3,
+                icon: (
+                  <Avatar
+                    src={matchingUser.photoURL}
+                    size={36}
+                    style={{ backgroundColor: 'transparent', border: '1px solid #ccc' }}
+                  />
+                ),
+              });
+            } else {
+              console.log(`User with uid ${newMessage.uid} not found.`);
+            }
           }
         });
       });
@@ -328,18 +350,18 @@ export default function ChatWindown() {
         unsubscribe();
       };
     }
-  }, [addDoc, db]);
+  }, [addDoc, db, uid, allMessages]);
 
   const [mostRecentMessageTimestamp, setMostRecentMessageTimestamp] = useState(null);
 
   useEffect(() => {
-    // Find the most recent message in the messages array
+
     const latestMessage = messages.reduce((latest, message) => {
       const messageTimestamp = message.createdAt?.seconds || 0;
       return messageTimestamp > (latest?.createdAt?.seconds || 0) ? message : latest;
     }, null);
 
-    // Update the mostRecentMessageTimestamp
+
     if (latestMessage) {
       setMostRecentMessageTimestamp(latestMessage.createdAt?.seconds);
     }
@@ -352,9 +374,9 @@ export default function ChatWindown() {
 
   useEffect(() => {
     if (messages) {
-      // Assuming 'members' is an array of members in the room
+
       members.forEach((member) => {
-        // Find the most recent seen message for the current member (excluding their own messages)
+
         const mostRecentSeenMessage = messages
           .filter((message) => message.uid !== member.uid && message.seenBy.includes(member.uid))
           .reduce((mostRecent, message) => {
@@ -362,7 +384,6 @@ export default function ChatWindown() {
           }, { createdAt: { seconds: 0 } });
 
         if (mostRecentSeenMessage.createdAt.seconds > 0) {
-          // Display the most recent seen message for the current user
           console.log(`Most recent seen message for ${member.displayName}:`, mostRecentSeenMessage);
           console.log(`Seen list for ${member.displayName}:`, mostRecentSeenMessage.seenBy.filter((seenUid) => seenUid !== member.uid));
         } else {
@@ -463,14 +484,14 @@ export default function ChatWindown() {
                         onChange={handleInputChange}
                         onPressEnter={handleOnSubmit}
                         style={{ flex: 1, marginBottom: 0 }}
-                        placeholder="Nhập tin nhắn"
+                        placeholder="Aa"
                       >
                         {members
                           .filter((member) => member.uid !== uid)
                           .map((member) => (
                             <Mentions.Option
                               key={member.uid}
-                              value={`${member.displayName}`} // Mention format
+                              value={`${member.displayName}`}
                             >
                               <Avatar src={member.photoURL} size={24} style={{ marginRight: 8 }} />
                               {member.displayName}
@@ -486,8 +507,8 @@ export default function ChatWindown() {
                             }}
                           />
                         }
-                        trigger="click" // Change to 'hover' if you prefer hover behavior
-                        placement="top" // Adjust placement as needed
+                        trigger="click"
+                        placement="top"
                         open={isEmojiPickerVisible}
                         onOpenChange={setIsEmojiPickerVisible}
                         style={{ position: 'absolute', right: 0, top: '100%' }}
@@ -503,7 +524,7 @@ export default function ChatWindown() {
                     type='primary'
                     onClick={handleOnSubmit}
                   >
-                    Gửi
+                    Send
                   </Button>
                 </FormStyled>
 
@@ -526,8 +547,8 @@ export default function ChatWindown() {
                     />
                   ) : (
                     <div>
-                      <p>Tên tệp: {selectedFile?.name}</p>
-                      <p>Kích thước: {selectedFile?.size} bytes</p>
+                      <p>File Name: {selectedFile?.name}</p>
+                      <p>File Size: {selectedFile?.size} bytes</p>
                     </div>
                   )}
                 </Modal>

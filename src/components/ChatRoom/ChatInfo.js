@@ -6,6 +6,8 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../firebase/config';
 import { EditOutlined, CameraOutlined, UploadOutlined, FilePdfOutlined, FileWordOutlined } from '@ant-design/icons';
 import { AppContext } from '../../Context/AppProvider';
+import { FileWordTwoTone, FilePdfTwoTone, FileExcelTwoTone, FileTextTwoTone, FileTwoTone } from '@ant-design/icons';
+
 
 const ChatInfoWrapper = styled.div`
     background-color: #f0f0f0;
@@ -142,6 +144,41 @@ const ChatInfo = ({ room }) => {
         return null; 
     };
 
+    const renderDocument = (fileURL) => {
+        // Define a mapping of file extensions to Ant Design icons
+        const fileIcons = {
+          '.pdf': <FilePdfTwoTone size='large' style={{fontSize: '18px'}} twoToneColor="#ff5722" />,
+          '.doc': <FileWordTwoTone size='large' style={{fontSize: '18px'}} twoToneColor="#007acc" />,
+          '.docx': <FileWordTwoTone size='large' style={{fontSize: '18px'}} twoToneColor="#007acc" />,
+          '.xls': <FileExcelTwoTone size='large' style={{fontSize: '18px'}} twoToneColor="#4caf50" />,
+          '.xlsx': <FileExcelTwoTone size='large' style={{fontSize: '18px'}} twoToneColor="#4caf50" />,
+          '.txt': <FileTextTwoTone size='large' style={{fontSize: '18px'}} twoToneColor="#333" />,
+        };
+      
+        // Get the file extension from the file URL
+        const fileExtension = fileURL
+          .substring(0, fileURL.indexOf('?'))
+          .substring(fileURL.lastIndexOf('.'))
+          .toLowerCase();
+      
+        // Check if the file extension is in the mapping
+        if (fileIcons[fileExtension]) {
+          // Render a clickable link with the file icon
+          return (
+            <a href={fileURL} target="_blank" rel="noopener noreferrer" className='content'>
+              {fileIcons[fileExtension]} {getFileName(fileURL)}
+            </a>
+          );
+        } else {
+          // Default to a generic file icon if the type is not recognized
+          return (
+            <a href={fileURL} target="_blank" rel="noopener noreferrer" className='content'>
+              <FileTwoTone twoToneColor="#999" />
+            </a>
+          );
+        }
+      };
+
     const getFileName = (url) => {
         const parts = url.split('/');
         const lastPart = parts[parts.length - 1].split('?')[0];
@@ -224,11 +261,8 @@ const ChatInfo = ({ room }) => {
                 {room.sharedFiles &&
                     room.sharedFiles.map((file, index) => (
                         <FileItem key={index}>
-                            {getFileTypeIcon(file)} {/* Display the file type icon */}
                             <Space>
-                                <a href={file} target="_blank" rel="noopener noreferrer">
-                                    {getFileName(file)}
-                                </a>
+                                {renderDocument(file)}
                             </Space>
                         </FileItem>
                     ))}

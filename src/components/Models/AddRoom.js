@@ -55,17 +55,17 @@ export default function AddRoom() {
     return (
         <div>
             <Modal
-                title='Tao phong'
+                title='Create a room'
                 open={isOpenAddRoom}
                 onOk={handleOk}
                 onCancel={handleCancel}
             >
                 <Form form={form} layout='vertical'>
-                    <Form.Item name='name' label='Ten Phong'>
-                        <Input placeholder='Nhap ten phong' />
+                    <Form.Item name='name' label='Room name'>
+                        <Input placeholder='Enter room name' />
                     </Form.Item>
-                    <Form.Item label='Mo ta' name='description'>
-                        <Input.TextArea placeholder='Nhap mo ta' />
+                    <Form.Item label='Description' name='description'>
+                        <Input.TextArea placeholder='Enter room description' />
                     </Form.Item>
                 </Form>
             </Modal>

@@ -84,75 +84,74 @@ export default function Login() {
 
     return (
         <div>
-            <Row justify='center' style={{ height: '800' }}>
-                <Col span={8}>
-                    <Title style={{ textAlign: 'center' }} level={3}>Welcome to Chat App</Title>
-                    <FormContainer>
-                        <Form form={form}>
-                            <InputContainer>
-                                <Form.Item
-                                    label="Email"
-                                    style={{ width: '90%' }}
-                                    hasFeedback
-                                    rules={
-                                        [
-                                            {
-                                                required: true,
-                                                message: 'Please enter a validate email',
-                                            }
-                                        ]
-                                    }
-                                >
-                                    <Input
-                                        style={{ marginLeft: '28px' }}
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                    />
-                                </Form.Item>
-                            </InputContainer>
-                            <InputContainer>
-                                <Form.Item
-                                    label="Password"
-                                    hasFeedback
-                                    rules={
-                                        [
-                                            {
-                                                required: true,
-                                                message: 'Please enter your password',
-                                            }
-                                        ]
-                                    }
-                                >
-                                    <Input.Password
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
-                                </Form.Item>
-                            </InputContainer>
-                            <Form.Item style={{ textAlign: 'center' }}>
-                                <Button type="primary" onClick={handleEmailLogin}>
-                                    Login
-                                </Button>
+        <Row justify='center' style={{ height: '800' }}>
+            <Col span={8}>
+                <Title style={{ textAlign: 'center' }} level={3}>
+                    Welcome to Chat App
+                </Title>
+                <FormContainer>
+                    <Form form={form}>
+                        <InputContainer>
+                            <Form.Item
+                                label="Email"
+                                style={{ width: '90%' }}
+                                hasFeedback
+                                name="email"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: 'Please enter a valid email',
+                                        type: 'email',
+                                    },
+                                ]}
+                            >
+                                <Input
+                                    style={{ marginLeft: '28px' }}
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
                             </Form.Item>
-                            <Form.Item style={{ textAlign: 'center' }}>
-                                <span>Not have account yet? </span>
-                                <Link to="/signup">Sign up now</Link>
+                        </InputContainer>
+                        <InputContainer>
+                            <Form.Item
+                                label="Password"
+                                hasFeedback
+                                name="password"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: 'Please enter your password',
+                                    },
+                                ]}
+                            >
+                                <Input.Password
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
                             </Form.Item>
-                        </Form>
+                        </InputContainer>
+                        <Form.Item style={{ textAlign: 'center' }}>
+                            <Button type="primary" onClick={handleEmailLogin}>
+                                Login
+                            </Button>
+                        </Form.Item>
+                        <Form.Item style={{ textAlign: 'center' }}>
+                            <span>Not have an account yet? </span>
+                            <Link to="/signup">Sign up now</Link>
+                        </Form.Item>
+                    </Form>
 
-                        <Button style={{ width: '75%', marginBottom: 5, marginLeft: '50px' }}
-                            onClick={handleGoogleLogin}
-                        >
-                            Login with <GoogleOutlined />
-                        </Button>
-                    </FormContainer>
-                    {/* <Button style={{ width: '75%', marginLeft: '50px' }}>
-                        Login with <FacebookOutlined />
-                    </Button> */}
-                </Col>
-            </Row>
-        </div>
+                    <Button
+                        style={{ width: '75%', marginBottom: 5, marginLeft: '50px' }}
+                        onClick={handleGoogleLogin}
+                    >
+                        Login with <GoogleOutlined />
+                    </Button>
+                </FormContainer>
+            </Col>
+        </Row>
+    </div>
     );
 }
 

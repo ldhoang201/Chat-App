@@ -33,7 +33,7 @@ function DebounceSelect({ fetchOption, debouceTimeout = 300, ...props }) {
             notFoundContent={fetching ? <Spin size='small' />
                 :
                 <Select.Option disabled key="notFound">
-                    Khong tim thay user
+                    User Not Found
                 </Select.Option>}
             {...props}
         >
